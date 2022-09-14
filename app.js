@@ -90,10 +90,10 @@ app.use(session({
 app.use(flash());
 
 //middleware untuklogging
-app.use((req, res, next) => {
-    console.log('Time:', Date.now())
-    next()
-})
+// app.use((req, res, next) => {
+//     console.log('Time:', Date.now())
+//     next()
+// })
 app.use(express.static('public'))//middleware untuk mengakses static files di direktori public.
 app.use(morgan('dev'))//middleware untuk logging request
 
@@ -213,7 +213,6 @@ const updateContactValidator = [
 
 //route untuk mengubah kontak yang sudah ada
 app.post('/contact/update', updateContactValidator,(req, res) => {
-    console.log('value darinewmobile: '+req.body.newMobile.length)
     //minimal salah satu dari ketiga field yang terisi
     let errorMessages = validationResult(req).array();
 
