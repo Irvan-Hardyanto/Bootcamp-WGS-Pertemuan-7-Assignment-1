@@ -1,0 +1,159 @@
+<%- include('layout/header') %>
+<%- include('layout/nav') %> 
+    <div class="container-fluid py-2">
+        <div class="container">
+            <div class="row">
+                <h1>Simple Contact App</h1>
+                <!-- <h2>By: Irvan Hardyanto</h2> -->
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid py-2">
+        <div class="container">
+            <div class="row">
+                <div class="col-2">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddContact">
+                        Add contact
+                      </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid py-3">
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                  <% if (typeof successMessage != 'undefined' && successMessage.length>0) { %>
+                    <div class="alert alert-success" role="alert">
+                      <%= successMessage  %> 
+                  </div>
+                  <% } %>
+                  <% if (typeof errorMessages != 'undefined' && errorMessages.length>0) { %>
+                    <div class="alert alert-danger" role="alert">
+                      <h5>Whoops!</h5>
+                      <ol>
+                    <% errorMessages.forEach(emsg => { %>
+                      <li><%= emsg.msg %> </li>
+                    <% }) %>
+                      </ol>
+                    </div>
+                  <% } %>
+                    <% if (typeof contacts == 'undefined' || contacts.length < 1) { %>
+                        <div class="alert alert-danger" role="alert">
+                            Contacts is empty!
+                        </div>
+                    <% } else { %>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">No</th>
+                                <th scope="col">Nama</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Mobile</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% contacts.forEach((contact,i) => { %>
+                                <tr id="<%= contact.name %>">
+                                    <th scope="row"><%= i+1 %></th>
+
+                                    <td><%= contact.name %></td>
+                                    <td><%= contact.email %></td>
+                                    <td><%= contact.mobile %></td>
+                                    <td><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalUpdateContact" onclick="document.getElementById('oldName').value = `<%= contact.name %>`" >Update</button> <a href="/contact/delete?name=<%= contact.name %>" type="button" class="btn btn-danger" >Delete</a></td>
+                                  </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Button trigger modal -->
+  
+  <!-- Modal -->
+  <div class="modal fade" id="modalAddContact" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Add New Contact</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="/contact/add" method="POST">
+            <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="name" aria-describedby="nameHelp" name="name">
+                <div id="nameHelp" class="form-text">Your name</div>
+            </div>
+            <div class="mb-3">
+                <label for="mobile" class="form-label">Mobile</label>
+                <input type="text" class="form-control" id="mobile" aria-describedby="mobileHelp" name="mobile">
+                <div id="mobileHelp" class="form-text">Your mobile number</div>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">Email addresss</label>
+              <input type="email" class="form-control" id="email" aria-describedby="mobileHelp" name="email">
+              <div id="emailHelp" class="form-text">Your email address</div>
+            </div>
+            <div>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+              <!--https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form-->
+              <input class="btn btn-primary" type="submit" value="Add Contact">
+              <!-- <button type="button" class="btn btn-primary" type="submit" name="contact" value="Add Contact"></button> -->
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="modalUpdateContact" tabindex="-1" aria-labelledby="modalUpdateContact" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="headerUpdateContact">Update Contact</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="/contact/update" method="POST">
+            <div class="mb-3">
+              <label for="oldName" class="form-label">Name</label>
+              <input type="text" class="form-control" id="oldName" aria-describedby="nameHelp" name="oldName" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="newName" class="form-label">New Name</label>
+              <input type="text" class="form-control" id="newName" aria-describedby="nameHelp" name="newName">
+            </div>
+            <!-- <div class="mb-3">
+              <label for="oldMobile" class="form-label">Mobile Number</label>
+              <input type="text" class="form-control" id="oldMobile" aria-describedby="nameHelp" name="oldMobile" readonly>
+            </div> -->
+            <div class="mb-3">
+              <label for="newMobile" class="form-label">New Mobile Number</label>
+              <input type="text" class="form-control" id="newMobile" aria-describedby="nameHelp" name="newMobile">
+            </div>
+            <!-- <div class="mb-3">
+              <label for="oldEmail" class="form-label">Email Address</label>
+              <input type="text" class="form-control" id="oldEmail" aria-describedby="nameHelp" name="oldEmail" readonly>
+            </div> -->
+            <div class="mb-3">
+              <label for="newEmail" class="form-label">New Email Address</label>
+              <input type="email" class="form-control" id="newEmail" aria-describedby="nameHelp" name="newEmail">
+            </div>
+            <div>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <input type="submit" class="btn btn-primary" value="Update Contact">
+            </div>
+          </form>
+        </div>
+        <!-- <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary">Update contact</button>
+        </div> -->
+      </div>
+    </div>
+  </div>
+  <%- include('layout/footer') %> 

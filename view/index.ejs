@@ -1,0 +1,18 @@
+<%- include('layout/header') %>
+<%- include('layout/nav') %> 
+<div class="row containter">
+    <h1>Web Server Node JS</h1>
+    <p>Welcome to my page <%= nama %></p>
+    <h4>Contact List</h4>
+    <% if (cont.length < 1){ %>
+        <p>Contact data is empty</p>
+    <% } else { %>
+    <% cont.forEach(conts => { %>
+        <ul>
+            <li> Name: <%= conts.name %> </li>
+            <li> Email: <%= conts.email %> </li>
+        </ul>
+    <% }) %>
+    <% } %>  
+</div>
+<%- include('layout/footer') %> 
