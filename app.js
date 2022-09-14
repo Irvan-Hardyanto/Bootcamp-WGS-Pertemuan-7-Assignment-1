@@ -20,25 +20,27 @@ let contactCache = undefined;
 
 //function dengan keyword mengembailkan promise
 //TODO: loadContactnya pake cache, jadi gak harus fetch berkali-kali dari database, cukup kalau datanya udah ganti
-const loadContact = async () => {
+const loadContact = async () => {//karena ada keyword async, kembalian function ini adalah promise
     const contacts = await pool.query(loadQuery);
     return contacts.rows;
 }
 //fungsi untuk menyimpan kontak ke database
-const saveContact = async (contact) => {
+const saveContact = async (contact) => {//karena ada keyword async, kembalian function ini adalah promise
     let queryString = "";
     queryString += `INSERT INTO ${tableName}(name,mobile,email) VALUES ('${contact.name}','${contact.mobile}','${contact.email}');`;
     await pool.query(queryString);
 }
 
-const getContact = async(name) => {
+//function untuk mendapatkan kontak dengan nama tertentu
+const getContact = async(name) => {//karena ada keyword async, kembalian function ini adalah promise
     name=name.toLowerCase();
     const queryString = `SELECT name,mobile,email FROM ${tableName} WHERE LOWER(name)='${name}';`;
-    const contact = await pool.query(queryString);
+    const contact = await pool.query(queryString);//await sampai promise nya resolved -> mengembalikan kontak yang ingin di-get
     return contact.rows;
 }
 
-const deleteContact= async (name)=>{
+//function untuk menghapus kontak dengan nama tertentu
+const deleteContact= async (name)=>{//karena ada keyword async, kembalian function ini adalah promise
     name=name.toLowerCase();
     const queryString = `DELETE FROM ${tableName} WHERE LOWER(name)='${name}';`;
     await pool.query(queryString);
@@ -46,7 +48,8 @@ const deleteContact= async (name)=>{
 
 
 //disini semua parameternya harus sudah divalidasi
-const updateContact = async(oldName,newName,newMobile,newEmail) => {
+//function untuk perbarui kontak
+const updateContact = async(oldName,newName,newMobile,newEmail) => {//karena ada keyword async, kembalian function ini adalah promise
     oldName=oldName.toLowerCase();
     let queryString = "";
     //TODO: ganti pake query builder biar lebih rapi kodenya
@@ -75,11 +78,15 @@ app.set('view engine', 'ejs');
 //supaya requestnyadikonversike json
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
+
+//middleware session untuk passing pesan error saat redirect
 app.use(session({
     secret: 'secret key',
     resave: false,
     saveUninitialized: false
   }));
+
+  //middleware flash untuk passing pesan error saat redirect
 app.use(flash());
 
 //middleware untuklogging
@@ -117,8 +124,10 @@ app.get('/contact', (req, res) => {
         //tampilkan pesan error / sukses ketika route lain di-redirect ke route ini
         res.render(__dirname + '/view/contact.ejs', { "title": "Contact", contacts,successMessage:req.flash('successMessage'),errorMessages:req.flash('errorMessages')});
     }).catch(err => {//catch jika terjadi error
+        //jika karena satu dan lain hal proses load kontak tidak berhasil
+        //set status code
         res.status(500);
-        console.log('err: '+err)
+
         let errorMessages = [];
         errorMessages.push({
             'value': loadQuery,
@@ -126,11 +135,12 @@ app.get('/contact', (req, res) => {
             'param': 'query()',
             'location': 'function'
         })
+        //tampilkan pesan kesalahan yang terjadi di halaman contact
         res.render(__dirname + '/view/contact.ejs', { "title": "Contact", errorMessages })
-        res.end();
     });
 })
 
+//untuk validasi pada saat menambahkan kontak baru
 const addContactValidator = [
     //value itu value saat ini
     body("name").custom(async (value, { req }) => {
@@ -176,6 +186,7 @@ app.post('/contact/add', addContactValidator, (req, res) => {
     }
 })
 
+//untuk validasi pada saat mengedit kontak yang sudah ada
 const updateContactValidator = [
     //value itu value saat ini
     body("newName").custom(async (value, { req }) => {
@@ -207,10 +218,14 @@ app.post('/contact/update', updateContactValidator,(req, res) => {
     let errorMessages = validationResult(req).array();
 
     if (errorMessages.length > 0) {
+        //jika ada input yang salah
         //redirect ke /contact dengan pesan error
         req.flash('errorMessages', errorMessages);
         res.redirect('/contact');
     }else if(!req.body.newName && !req.body.newMobile && !req.body.newEmail){
+        //jika input masih kosong
+        //redirect ke route /contact sambil membawa pesan kesalahan
+        //menggunakan modul flash
         errorMessages.push({
             'value': undefined,
             'msg': 'Please fill your new name or email or mobile!',
@@ -221,40 +236,45 @@ app.post('/contact/update', updateContactValidator,(req, res) => {
         res.redirect('/contact');
     }else{
         updateContact(req.body.oldName,req.body.newName,req.body.newMobile,req.body.newEmail).then(succ=>{
+            //jika berhasil, redirect ke route /contact dengan notifikasi
             req.flash('successMessage',`Contact ${req.body.oldName} updated!`);
                 res.redirect('/contact'); 
         }).catch(err=>{
+            //jika tidak, redirect ke route /contact dengan pesan kesalahan
             errorMessages.push({
                 'value': undefined,
                 'msg': `A Fatal error has occured, cannot update contact ${req.body.oldName} full error message is: ${err}`,
                 'param': 'query()',
                 'location': 'function'
             })
+            //kirim pesan kesalahan bersamaan dengan redirect
             req.flash('errorMessages', errorMessages);
             res.redirect('/contact');
         });
     }
 })
 
+//route untuk menghapus kontak tertentu
 app.get('/contact/delete', (req, res) => {
     let errorMessages=[];
     loadContact().then(contacts=>{
         //TODO: tambah validasi
         return deleteContact(url.parse(req.url, true).query.name);
     }).then(suc=>{
-        //redirect ke /contact dengan notifikasi
+        //redirect ke route /contact dengan notifikasi
         req.flash('successMessage', 'Contact has been deleted!');
         res.redirect('/contact');
     }).catch(err=>{
+        //redirect ke route /contact dengan pesan error
         errorMessages.push({
             'value': undefined,
             'msg': 'A Fatal error has occured, cannot delete contact',
             'param': 'query()',
             'location': 'function'
         })
+        //kirim pesan error bersamaan dengan redirect
         req.flash('errorMessages', errorMessages);
         res.redirect('/contact');
-        //redirect ke /contact dengan pesan kesalahan
     });
 })
 
